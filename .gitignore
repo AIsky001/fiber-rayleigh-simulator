@@ -4,7 +4,10 @@ work/
 *.log
 *.status
 *.recovery
+*.class
 .env
+/gradle/
+outputs/comsol-verified-*/
 android/.gradle/
 android/local.properties
 android/app/build/

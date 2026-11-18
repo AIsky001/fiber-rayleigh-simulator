@@ -2,6 +2,12 @@
 
 作者：池行强。Windows、安卓与网页使用相同的仿真界面。默认条件为 SMF-28、长度 100 mm、Pd 10 nm、Cu 10 nm、铜层电流 1 mA、氢气体积分数 1%。
 
+## GitHub 下载
+
+安卓安装包与可编辑源码 ZIP 在本仓库的 **Releases** 页面提供。用手机浏览器打开发布页，展开 **Assets**，下载以 `.apk` 结尾的文件，再从手机“文件管理 → 下载”中安装。微信内无法下载时，请使用系统浏览器打开发布页。登录名和密码均为 `admin`。
+
+本仓库包含已验证的安卓调试版安装包 `downloads/FiberRayleigh-1.0.0-Android.apk`。首次推送到 `main` 后，GitHub Actions 会校验安装包并自动创建 `v1.0.0` 测试版发布，同时提供源码 ZIP 和 SHA-256 校验文件。发布进度可在 **Actions** 页面查看；已经存在的同名发布不会被覆盖。更新安装包时需同步版本号、校验文件和发布说明。
+
 ## 安卓 APP
 
 `android/` 是原生 Android WebView 容器，仿真页面与 JavaScript 作为安装包 assets 离线提供。安卓端使用 `admin/admin` 本地演示登录；首次登录后会保存登录状态，退出登录会清除。桌面网页仍保留一次性扫码确认流程。
@@ -76,4 +82,4 @@ pnpm source
 - [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator)：本地生成扫码登录二维码。
 - [Lucide](https://github.com/lucide-icons/lucide)：工具按钮图标。
 
-第三方授权见 `THIRD_PARTY_NOTICES.md` 和随附许可证。本项目没有自动发布到 GitHub，也未将本机 COMSOL 或其许可证打包。
+第三方授权见 `THIRD_PARTY_NOTICES.md` 和随附许可证。本机 COMSOL 软件及其许可证不随项目分发。

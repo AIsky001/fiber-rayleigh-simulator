@@ -1,0 +1,46 @@
+name: Publish Android App
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'downloads/**'
+      - 'package.json'
+      - '.github/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-android
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate source and APK
+        run: |
+          node --test tests/app.test.cjs
+          sha256sum --check .github/android-apk.sha256
+
+      # Publish the checked local APK so its signing certificate stays unchanged.
+      - name: Publish APK and editable source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(node -p 'require("./package.json").version')"
+          tag="v$version"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Release $tag already exists; leaving it unchanged."
+            exit 0
+          fi
+          mkdir -p artifacts
+          cp "downloads/FiberRayleigh-$version-Android.apk" artifacts/
+          git archive --format=zip --output="artifacts/FiberRayleigh-$version-Editable-Source.zip" HEAD -- . ':!downloads'
+          cd artifacts
+          sha256sum ./*.apk ./*.zip > SHA256SUMS.txt
+          gh release create "$tag" ./*.apk ./*.zip SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "v$version 安卓测试版" --notes-file ../.github/RELEASE_NOTES.md --prerelease
