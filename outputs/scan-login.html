@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <title>确认扫码登录 · 武汉职业技术大学</title>
+  <style>
+    :root { font-family: Inter, "Segoe UI", "Microsoft YaHei", sans-serif; color: #202b2d; background: #edf2ee; }
+    * { box-sizing: border-box; }
+    body { min-height: 100vh; display: grid; place-items: center; margin: 0; padding: 20px; }
+    main { width: min(100%, 430px); padding: 28px 24px 22px; border: 1px solid #dce3df; border-radius: 8px; background: white; }
+    .mark { width: 42px; height: 42px; display: grid; place-items: center; margin-bottom: 18px; border-radius: 7px; color: white; background: #167a68; font-size: 19px; font-weight: 750; }
+    h1 { margin: 0; font-size: 21px; }
+    p { color: #647274; font-size: 13px; line-height: 1.6; }
+    .device { margin: 18px 0; padding: 12px; border: 1px solid #e4e9e6; border-radius: 5px; color: #43514d; background: #f8faf8; font-size: 12px; line-height: 1.5; }
+    button { width: 100%; min-height: 44px; border: 1px solid #167a68; border-radius: 5px; color: white; background: #167a68; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+    button:disabled { border-color: #adb9b3; color: #66736d; background: #e6ebe8; cursor: default; }
+    .status { min-height: 22px; margin: 12px 0 0; color: #56645f; font-size: 12px; }
+    .status.error { color: #b24b35; }
+    footer { margin-top: 22px; padding-top: 13px; border-top: 1px solid #edf0ee; color: #7a8783; font-size: 10px; text-align: center; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark" aria-hidden="true">光</div>
+    <h1>确认登录仿真平台</h1>
+    <p>电脑端正在等待扫码登录。确认后，该电脑浏览器会获得登录会话。</p>
+    <div class="device" id="deviceInfo">正在检查二维码…</div>
+    <button id="approveButton" type="button" disabled>确认登录</button>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+    <footer>武汉职业技术大学 · 光纤传感仿真平台 · 作者：池行强</footer>
+  </main>
+  <script>
+    (() => {
+      const query = new URLSearchParams(location.search);
+      const ticket = query.get("ticket");
+      const key = query.get("key");
+      const button = document.getElementById("approveButton");
+      const status = document.getElementById("status");
+      const info = document.getElementById("deviceInfo");
+      if (!ticket || !key) {
+        info.textContent = "二维码缺少登录凭据。";
+        status.textContent = "请回到电脑刷新二维码后重新扫描。";
+        status.classList.add("error");
+        return;
+      }
+      info.textContent = `登录请求编号：${ticket.slice(0, 8)}…。二维码有效期约 2 分钟，且只能确认一次。`;
+      button.disabled = false;
+      button.addEventListener("click", async () => {
+        button.disabled = true;
+        status.textContent = "正在确认…";
+        try {
+          const response = await fetch("/api/qr/approve", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ticket, key })
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || "确认失败");
+          button.textContent = "已确认";
+          status.textContent = "登录已授权。请回到电脑，页面会自动进入仿真界面。";
+        } catch (error) {
+          button.disabled = false;
+          status.textContent = error.message || "网络连接失败，请重新扫描。";
+          status.classList.add("error");
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

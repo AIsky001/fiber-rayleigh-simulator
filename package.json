@@ -1,0 +1,37 @@
+{
+  "name": "fiber-rayleigh-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SMF-28 optical fiber strain and Rayleigh simulation desktop application",
+  "author": "池行强 · 武汉职业技术大学",
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "web": "node outputs/server.js",
+    "test": "node --test tests/*.test.cjs",
+    "dist": "electron-builder --win portable --x64",
+    "source": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-source.ps1"
+  },
+  "devDependencies": {
+    "electron": "45.3.1",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "cn.whpu.fiber-rayleigh",
+    "productName": "FiberRayleigh",
+    "copyright": "Copyright © 2026 池行强 · 武汉职业技术大学",
+    "artifactName": "FiberRayleigh-${version}-Windows-${arch}.${ext}",
+    "directories": { "output": "release" },
+    "files": [
+      "desktop/**", "assets/**", "outputs/server.js", "outputs/fiber-rayleigh-simulator.html",
+      "outputs/scan-login.html", "outputs/qrcode-generator.js", "outputs/lucide.min.js",
+      "outputs/project.js", "outputs/app-controls.js", "outputs/lucide.LICENSE.txt", "README.md", "THIRD_PARTY_NOTICES.md"
+    ],
+    "extraResources": [{
+      "from": "outputs", "to": "comsol-template",
+      "filter": ["FiberRayleighComsol.java", "fiber_rayleigh_comsol.mph", "run-comsol.ps1", "run-comsol.bat", "rayleigh-postprocess.js", "COMSOL模型说明.md"]
+    }],
+    "win": { "target": ["portable"], "icon": "assets/app-icon.ico", "signExecutable": false },
+    "portable": { "requestExecutionLevel": "user" }
+  }
+}

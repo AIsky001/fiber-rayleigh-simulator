@@ -1,0 +1,12 @@
+node_modules/
+release/
+work/
+*.log
+*.status
+*.recovery
+.env
+android/.gradle/
+android/local.properties
+android/app/build/
+android/app/src/main/assets/
+android/.idea/

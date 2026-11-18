@@ -1,0 +1,44 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'cn.whpu.fiberrayleigh'
+    compileSdk 33
+    buildToolsVersion '33.0.2'
+
+    defaultConfig {
+        applicationId 'cn.whpu.fiberrayleigh'
+        minSdk 24
+        targetSdk 32
+        versionCode 1
+        versionName '1.0.0'
+        manifestPlaceholders = [appAuthor: '池行强', appInstitution: '武汉职业技术大学']
+    }
+
+    sourceSets {
+        main.assets.srcDirs = ['src/main/assets', layout.buildDirectory.dir('generated/fiberAndroidAssets')]
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+// Package only the offline UI and its runtime scripts; the shared output folder
+// also contains desktop-only COMSOL models, solver logs, and result archives.
+def syncFiberAndroidAssets = tasks.register('syncFiberAndroidAssets', Sync) {
+    from('../../outputs') {
+        include 'fiber-rayleigh-simulator.html'
+        include 'project.js'
+        include 'app-controls.js'
+        include 'qrcode-generator.js'
+        include 'lucide.min.js'
+    }
+    into(layout.buildDirectory.dir('generated/fiberAndroidAssets'))
+}
+
+tasks.named('preBuild').configure {
+    dependsOn(syncFiberAndroidAssets)
+}

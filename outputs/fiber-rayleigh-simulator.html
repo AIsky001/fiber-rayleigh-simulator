@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>武汉职业技术大学 · 光纤应变与瑞利散射仿真</title>
+  <style>
+    :root {
+      --ink: #202b2d;
+      --muted: #647274;
+      --line: #dce3df;
+      --paper: #f2f5f2;
+      --white: #fff;
+      --green: #167a68;
+      --green-soft: #e1f2ec;
+      --blue: #3479a5;
+      --orange: #c66c39;
+      --gold: #a88228;
+      --plot: #192526;
+      --plot-grid: #405051;
+      --radius: 7px;
+      font-family: Inter, "Segoe UI", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--paper); }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    body.auth-locked { overflow-x: hidden; }
+    body.auth-locked > .shell { display: none; }
+    .login-screen { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; padding: 24px; background: #e9efeb; }
+    .login-screen[hidden] { display: none; }
+    .login-card { width: min(100%, 420px); padding: 26px 25px 22px; border: 1px solid var(--line); border-radius: 8px; background: var(--white); box-shadow: 0 18px 45px #1f403519; }
+    .login-mark { width: 42px; height: 42px; display: grid; place-items: center; margin-bottom: 18px; border-radius: 7px; color: #fff; background: var(--green); font-size: 19px; font-weight: 750; }
+    .login-card h1 { margin: 0; font-size: 22px; }
+    .login-card .login-subtitle { margin: 7px 0 16px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .qr-login { display: grid; justify-items: center; }
+    .qr-frame { width: 224px; height: 224px; display: grid; place-items: center; border: 1px solid #e1e8e3; border-radius: 6px; background: #fff; }
+    .qr-frame canvas { display: block; width: 208px; height: 208px; image-rendering: pixelated; }
+    .qr-hint { min-height: 19px; margin: 10px 0 0; color: #687671; font-size: 11px; text-align: center; }
+    .qr-hint.error { color: #b24b35; }
+    .qr-actions { width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 10px; }
+    .qr-actions .button { min-height: 32px; }
+    .qr-countdown { min-width: 66px; color: #77847f; font-size: 10px; font-variant-numeric: tabular-nums; }
+    details.auth-fallback { width: 100%; margin-top: 15px; border-top: 1px solid #edf0ee; }
+    details.auth-fallback summary { padding: 13px 0 2px; color: #52615b; font-size: 11px; font-weight: 650; text-align: center; cursor: pointer; list-style: none; }
+    details.auth-fallback summary::-webkit-details-marker { display: none; }
+    details.auth-fallback summary::after { content: "＋"; margin-left: 6px; color: var(--green); }
+    details.auth-fallback[open] summary::after { content: "−"; }
+    .password-fields { padding-top: 6px; }
+    .login-field { margin-top: 13px; }
+    .login-field label { display: block; margin-bottom: 6px; color: #485654; font-size: 11px; font-weight: 650; }
+    .login-field input { width: 100%; height: 38px; padding: 0 10px; border: 1px solid #d5ddda; border-radius: 4px; outline: none; color: var(--ink); background: #fcfdfc; font-size: 13px; }
+    .login-field input:focus { border-color: var(--green); box-shadow: 0 0 0 2px #167a681c; }
+    .login-submit { width: 100%; margin-top: 20px; }
+    .login-error { min-height: 17px; margin: 10px 0 0; color: #b24b35; font-size: 11px; }
+    .login-signature { margin: 20px 0 0; padding-top: 13px; border-top: 1px solid #edf0ee; color: #7a8783; font-size: 10px; text-align: center; }
+    .logout-button { color: #687671; }
+    .shell { max-width: 1500px; margin: 0 auto; padding: 28px 32px 36px; }
+    .topbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+    .eyebrow { margin: 0 0 7px; color: var(--green); font-size: 12px; font-weight: 750; letter-spacing: 0; }
+    h1 { margin: 0; font-size: 27px; line-height: 1.2; font-weight: 700; letter-spacing: 0; }
+    .subtitle { margin: 7px 0 0; max-width: 760px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .top-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .button { min-height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 12px; border: 1px solid #cbd5d0; border-radius: 5px; color: var(--ink); background: var(--white); font-size: 12px; font-weight: 650; }
+    .button:hover { border-color: #84948d; background: #f9fbf9; }
+    .button.primary { border-color: var(--green); color: #fff; background: var(--green); }
+    .button.primary:hover { background: #106653; }
+    .button .icon { font-size: 16px; line-height: 1; }
+    .button svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .button:disabled { opacity: .55; cursor: default; }
+    [hidden] { display: none !important; }
+    .project-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 0 16px; margin-bottom: 18px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .project-name { flex: 1; min-width: 180px; }
+    .project-name label { display: block; font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+    .project-name input { width: 100%; max-width: 380px; padding: 7px 8px; border: 1px solid #cbd5d0; border-radius: 4px; background: white; color: var(--ink); font-size: 13px; }
+    .project-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .project-status { width: 100%; margin: 0; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+    .project-status.error { color: #b24b35; }
+    .project-notes { margin: 0 0 16px; }
+    .project-notes summary { cursor: pointer; font-size: 11px; color: var(--muted); }
+    .project-notes textarea { width: 100%; min-height: 75px; margin-top: 9px; padding: 10px; font: inherit; font-size: 12px; border: 1px solid var(--line); border-radius: 4px; resize: vertical; }
+    dialog.source-dialog { width: min(1100px, calc(100vw - 28px)); max-height: calc(100vh - 28px); padding: 20px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); }
+    dialog::backdrop { background: #202b2d70; }
+    .source-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .source-heading h2 { margin: 0; font-size: 16px; }
+    .source-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+    #sourceEditor { display: block; width: 100%; height: min(55vh, 520px); padding: 14px; resize: vertical; border: 1px solid #465652; border-radius: 4px; color: #e5f2ec; background: #1e2a27; font: 12px/1.65 Consolas, "Cascadia Code", monospace; tab-size: 4; white-space: pre; }
+    .source-state { margin: 10px 0; font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+    #comsolLog { max-height: 130px; overflow: auto; padding: 10px; background: #f2f5f2; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 10px; }
+    .layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; }
+    .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
+    .controls { padding: 18px 17px 16px; }
+    .panel-title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 15px; font-size: 14px; font-weight: 720; }
+    .panel-title small { color: var(--muted); font-size: 10px; font-weight: 550; }
+    .group-label { margin: 17px 0 9px; padding-top: 13px; border-top: 1px solid #edf0ee; color: #596765; font-size: 10px; font-weight: 750; letter-spacing: .55px; }
+    .group-label.first { margin-top: 0; padding-top: 0; border-top: 0; }
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px 10px; }
+    .field { min-width: 0; }
+    .field.full { grid-column: 1 / -1; }
+    .field label { display: block; margin: 0 0 5px; color: #485654; font-size: 11px; font-weight: 600; }
+    .input-wrap { position: relative; }
+    .field input { width: 100%; height: 34px; padding: 0 39px 0 9px; border: 1px solid #d5ddda; border-radius: 4px; outline: none; color: var(--ink); background: #fcfdfc; font-size: 12px; font-variant-numeric: tabular-nums; }
+    .field input:focus { border-color: var(--green); box-shadow: 0 0 0 2px #167a681c; }
+    .unit { position: absolute; top: 50%; right: 8px; transform: translateY(-50%); color: #82908c; font-size: 10px; pointer-events: none; }
+    details.advanced { margin-top: 16px; border-top: 1px solid #edf0ee; }
+    details.advanced summary { padding: 13px 0 3px; color: #465450; font-size: 11px; font-weight: 700; cursor: pointer; list-style: none; }
+    details.advanced summary::-webkit-details-marker { display: none; }
+    details.advanced summary::after { content: "+"; float: right; color: var(--green); font-size: 15px; line-height: 11px; }
+    details.advanced[open] summary::after { content: "−"; }
+    .advanced .field-grid { padding-top: 12px; }
+    .advanced-note { margin: 10px 0 0; color: #788582; font-size: 10px; line-height: 1.5; }
+    .run-row { display: flex; gap: 8px; margin-top: 18px; }
+    .run-row .button { flex: 1; }
+    .results { min-width: 0; }
+    .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); overflow: hidden; }
+    .metric { min-height: 88px; padding: 14px 16px 12px; border-right: 1px solid #e8edeb; }
+    .metric:last-child { border-right: 0; }
+    .metric-label { margin: 0 0 8px; color: var(--muted); font-size: 10px; font-weight: 650; }
+    .metric-value { display: flex; align-items: baseline; gap: 5px; white-space: nowrap; font-size: 21px; line-height: 1; font-weight: 720; font-variant-numeric: tabular-nums; }
+    .metric-value span { color: #6d7b77; font-size: 11px; font-weight: 580; }
+    .metric:nth-child(1) .metric-value { color: var(--blue); }
+    .metric:nth-child(2) .metric-value { color: var(--orange); }
+    .metric:nth-child(3) .metric-value { color: var(--gold); }
+    .metric:nth-child(4) .metric-value { color: var(--green); }
+    .secondary-metrics { display: flex; flex-wrap: wrap; gap: 8px 22px; padding: 11px 14px; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 var(--radius) var(--radius); background: #f9fbf9; color: #566460; font-size: 10px; }
+    .secondary-metrics strong { margin-left: 4px; color: var(--ink); font-size: 11px; font-variant-numeric: tabular-nums; }
+    .chart-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 14px; margin-top: 16px; }
+    .chart-panel { min-width: 0; padding: 15px 15px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
+    .chart-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .chart-heading h2 { margin: 0; font-size: 13px; font-weight: 720; }
+    .chart-sub { margin: 4px 0 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .legend { display: flex; flex-wrap: wrap; gap: 10px; color: #677570; font-size: 10px; }
+    .legend-item { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .legend-line { width: 15px; height: 2px; border-radius: 3px; background: var(--green); }
+    .legend-line.orange { background: var(--orange); }
+    .legend-line.blue { background: var(--blue); }
+    canvas { display: block; width: 100%; height: 265px; }
+    .chart-panel.small canvas { height: 265px; }
+    .chart-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 4px; color: #7a8783; font-size: 9px; line-height: 1.4; }
+    .interpretation { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+    .readout { padding: 12px 14px; border-left: 3px solid var(--green); background: #eaf3ef; color: #43534e; font-size: 11px; line-height: 1.55; }
+    .readout.orange { border-color: var(--orange); background: #f8eee8; }
+    .readout strong { color: #23312d; }
+    .model-notes { margin-top: 14px; border-top: 1px solid #dce3df; padding-top: 12px; color: #64716d; font-size: 10px; line-height: 1.65; }
+    .model-notes summary { color: #465450; font-size: 11px; font-weight: 700; cursor: pointer; }
+    .model-notes p { margin: 9px 0 0; }
+    .model-notes code { color: #314541; font-family: "Cascadia Code", Consolas, monospace; font-size: 10px; }
+    .footer-note { margin-top: 12px; color: #82908b; font-size: 9px; }
+    @media (max-width: 1060px) {
+      .shell { padding: 22px 20px 30px; }
+      .layout { grid-template-columns: 265px minmax(0, 1fr); gap: 14px; }
+      .chart-grid { grid-template-columns: minmax(0, 1.4fr) minmax(250px, 1fr); gap: 10px; }
+      .metric { padding-left: 12px; padding-right: 10px; }
+      .metric-value { font-size: 18px; }
+      canvas, .chart-panel.small canvas { height: 235px; }
+    }
+    @media (max-width: 760px) {
+      .shell { padding: 18px 14px 26px; }
+      .topbar { align-items: flex-start; flex-direction: column; gap: 14px; margin-bottom: 16px; }
+      h1 { font-size: 23px; }
+      .top-actions { width: 100%; }
+      .top-actions .button { flex: 1; }
+      .layout { grid-template-columns: 1fr; }
+      .controls { order: 2; }
+      .results { order: 1; }
+      .metric-grid { grid-template-columns: 1fr 1fr; }
+      .metric { min-height: 78px; border-bottom: 1px solid #e8edeb; }
+      .metric:nth-child(2) { border-right: 0; }
+      .metric:nth-child(3), .metric:nth-child(4) { border-bottom: 0; }
+      .secondary-metrics { border-top: 0; border-radius: 0 0 var(--radius) var(--radius); }
+      .chart-grid { grid-template-columns: 1fr; }
+      .chart-panel { padding: 13px 11px 10px; }
+      canvas, .chart-panel.small canvas { height: 230px; }
+      .interpretation { grid-template-columns: 1fr; gap: 8px; }
+    }
+    @media (max-width: 390px) {
+      .metric-value { font-size: 17px; }
+      .metric { padding-left: 10px; }
+      .chart-foot { flex-direction: column; }
+    }
+  </style>
+</head>
+<body class="auth-locked">
+  <section class="login-screen" id="loginScreen" aria-label="登录">
+    <div class="login-card">
+      <div class="login-mark" aria-hidden="true">光</div>
+      <h1>光纤应变与瑞利散射仿真</h1>
+      <p class="login-subtitle" id="loginSubtitle">扫码确认后在电脑端自动登录</p>
+      <div class="qr-login" id="qrLoginPanel">
+        <div class="qr-frame"><canvas id="qrCanvas" width="224" height="224" aria-label="扫码登录二维码"></canvas></div>
+        <p class="qr-hint" id="qrHint" role="status" aria-live="polite">正在生成一次性登录二维码…</p>
+        <div class="qr-actions">
+          <button class="button" id="refreshQrBtn" type="button" title="刷新一次性登录二维码"><span class="icon" aria-hidden="true">↻</span>刷新二维码</button>
+          <span class="qr-countdown" id="qrCountdown">有效期 02:00</span>
+        </div>
+      </div>
+      <details class="auth-fallback">
+        <summary>使用密码登录</summary>
+        <form id="passwordLoginForm" class="password-fields">
+          <div class="login-field">
+            <label for="loginUsername">登录名</label>
+            <input id="loginUsername" name="username" type="text" autocomplete="username" required>
+          </div>
+          <div class="login-field">
+            <label for="loginPassword">密码</label>
+            <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+          </div>
+          <button class="button primary login-submit" type="submit">登录</button>
+        </form>
+      </details>
+      <p class="login-error" id="loginError" role="alert" aria-live="polite"></p>
+      <p class="login-signature">武汉职业技术大学 · 光纤传感仿真平台 · 作者：池行强</p>
+    </div>
+  </section>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">武汉职业技术大学 · 作者：池行强</p>
+        <h1>光纤应变与瑞利散射仿真</h1>
+        <p class="subtitle">SMF-28 裸光纤表面 Pd/Cu 薄膜；估算铜层焦耳温升、氢致应变和瑞利谱移，并生成归一化相干散斑对比。</p>
+      </div>
+      <div class="top-actions">
+        <button class="button" id="resetBtn" type="button" title="恢复默认实验参数"><i data-lucide="rotate-ccw" aria-hidden="true"></i>恢复默认</button>
+        <button class="button" id="exportBtn" type="button" title="导出当前仿真曲线为 CSV"><i data-lucide="download" aria-hidden="true"></i>导出 CSV</button>
+        <button class="button logout-button" id="logoutBtn" type="button" title="退出当前登录">退出登录</button>
+      </div>
+    </header>
+
+    <section class="project-bar" aria-label="实验项目">
+      <div class="project-name"><label for="projectName">实验项目</label><input id="projectName" value="SMF-28 钯铜氢敏实验" maxlength="100"></div>
+      <div class="project-actions">
+        <button class="button" id="saveProjectBtn" type="button" title="保存实验项目 JSON"><i data-lucide="save" aria-hidden="true"></i>保存项目</button>
+        <button class="button" id="importProjectBtn" type="button" title="导入实验项目 JSON"><i data-lucide="folder-open" aria-hidden="true"></i>打开项目</button>
+        <button class="button" id="sourceBtn" type="button" hidden><i data-lucide="code-xml" aria-hidden="true"></i>COMSOL 源码</button>
+        <button class="button" id="openModelBtn" type="button" hidden><i data-lucide="box" aria-hidden="true"></i>打开 MPH</button>
+      </div>
+      <input id="projectFile" type="file" accept=".json,application/json" hidden>
+      <p class="project-status" id="projectStatus" role="status" aria-live="polite">未修改</p>
+    </section>
+    <details class="project-notes"><summary>实验备注</summary><textarea id="projectNotes" maxlength="20000" aria-label="实验备注"></textarea></details>
+
+    <div class="layout">
+      <aside class="controls panel" aria-label="仿真参数">
+        <h2 class="panel-title">实验参数 <small>编辑后自动更新</small></h2>
+        <p class="group-label first">光纤与金属层</p>
+        <div class="field-grid">
+          <div class="field"><label for="length">光纤长度</label><div class="input-wrap"><input id="length" type="number" min="1" max="10000" step="1" value="100"><span class="unit">mm</span></div></div>
+          <div class="field"><label for="wavelength">工作波长</label><div class="input-wrap"><input id="wavelength" type="number" min="700" max="1700" step="1" value="1550"><span class="unit">nm</span></div></div>
+          <div class="field"><label for="pd">钯层厚度</label><div class="input-wrap"><input id="pd" type="number" min="0" max="1000" step="1" value="10"><span class="unit">nm</span></div></div>
+          <div class="field"><label for="cu">铜层厚度</label><div class="input-wrap"><input id="cu" type="number" min="0.1" max="1000" step="1" value="10"><span class="unit">nm</span></div></div>
+          <div class="field"><label for="current">铜层电流</label><div class="input-wrap"><input id="current" type="number" min="0" max="1000" step="0.1" value="1"><span class="unit">mA</span></div></div>
+          <div class="field"><label for="hydrogen">氢气体积分数</label><div class="input-wrap"><input id="hydrogen" type="number" min="0" max="100" step="0.1" value="1"><span class="unit">%</span></div></div>
+        </div>
+        <p class="group-label">环境</p>
+        <div class="field-grid">
+          <div class="field"><label for="ambient">环境温度</label><div class="input-wrap"><input id="ambient" type="number" min="-50" max="300" step="0.5" value="25"><span class="unit">°C</span></div></div>
+          <div class="field"><label for="pressure">总气压</label><div class="input-wrap"><input id="pressure" type="number" min="0.01" max="100" step="0.1" value="1"><span class="unit">atm</span></div></div>
+        </div>
+        <details class="advanced">
+          <summary>模型与仪器参数</summary>
+          <div class="field-grid">
+            <div class="field"><label for="rhoFactor">铜薄膜电阻率倍率</label><div class="input-wrap"><input id="rhoFactor" type="number" min="1" max="1000" step="0.5" value="3"><span class="unit">×体电阻率</span></div></div>
+            <div class="field"><label for="heatTransfer">等效散热系数</label><div class="input-wrap"><input id="heatTransfer" type="number" min="0.1" max="1000" step="0.5" value="8"><span class="unit">W/m²K</span></div></div>
+            <div class="field"><label for="hSensitivity">氢致应变传递系数</label><div class="input-wrap"><input id="hSensitivity" type="number" min="0" max="10000" step="0.1" value="0.1"><span class="unit">µε / 1% H₂</span></div></div>
+            <div class="field"><label for="gauge">瑞利相关长度</label><div class="input-wrap"><input id="gauge" type="number" min="0.1" max="10000" step="0.5" value="10"><span class="unit">mm</span></div></div>
+          </div>
+          <p class="advanced-note">氢致传递系数是待标定的等效灵敏度；瑞利频率相关带宽由相关长度和折射率估算。</p>
+        </details>
+        <div class="run-row"><button class="button primary" id="runBtn" type="button"><span class="icon" aria-hidden="true">⟳</span>重新仿真</button></div>
+      </aside>
+
+      <section class="results" aria-label="仿真结果">
+        <div class="metric-grid" aria-live="polite">
+          <div class="metric"><p class="metric-label">铜层轴向电阻</p><div class="metric-value" id="resistanceOut">—<span>Ω</span></div></div>
+          <div class="metric"><p class="metric-label">焦耳功率 I²R</p><div class="metric-value" id="powerOut">—<span>mW</span></div></div>
+          <div class="metric"><p class="metric-label">稳态温升估算</p><div class="metric-value" id="tempOut">—<span>K</span></div></div>
+          <div class="metric"><p class="metric-label">瑞利等效谱移</p><div class="metric-value" id="shiftOut">—<span>GHz</span></div></div>
+        </div>
+        <div class="secondary-metrics">
+          <span>Pd 氢致应变<strong id="hydrogenStrainOut">—</strong></span>
+          <span>轴向机械应变<strong id="mechanicalStrainOut">—</strong></span>
+          <span>光学等效应变<strong id="opticalStrainOut">—</strong></span>
+          <span>回波强度相关<strong id="correlationOut">—</strong></span>
+        </div>
+
+        <div class="chart-grid">
+          <section class="chart-panel" aria-labelledby="rayleighTitle">
+            <div class="chart-heading">
+              <div><h2 id="rayleighTitle">瑞利后向散射强度</h2><p class="chart-sub">相同随机光纤指纹在扰动前后的归一化相干回波</p></div>
+            </div>
+            <div class="legend"><span class="legend-item"><i class="legend-line"></i>基准</span><span class="legend-item"><i class="legend-line orange"></i>加热 + H₂</span></div>
+            <canvas id="rayleighCanvas" aria-label="基准与扰动后的归一化瑞利后向散射强度随距离变化图"></canvas>
+            <div class="chart-foot"><span>距离 z (mm)</span><span>强度按基准均值归一化；每次加载采用可复现的随机散斑</span></div>
+          </section>
+          <section class="chart-panel small" aria-labelledby="strainTitle">
+            <div class="chart-heading">
+              <div><h2 id="strainTitle">沿程应变响应</h2><p class="chart-sub">全长均匀加热与均匀氢浓度假设</p></div>
+            </div>
+            <div class="legend"><span class="legend-item"><i class="legend-line blue"></i>机械应变</span><span class="legend-item"><i class="legend-line orange"></i>光学等效</span></div>
+            <canvas id="strainCanvas" aria-label="机械应变与光学等效应变随光纤距离变化图"></canvas>
+            <div class="chart-foot"><span>距离 z (mm)</span><span>应变 (µε)</span></div>
+          </section>
+        </div>
+
+        <div class="interpretation">
+          <div class="readout" id="thermalReadout">焦耳热与温升估算。</div>
+          <div class="readout orange" id="signalReadout">瑞利相干散斑响应估算。</div>
+        </div>
+
+        <details class="model-notes">
+          <summary>模型方程与适用范围</summary>
+          <p><strong>电热：</strong><code>R = ρCu·f·L / (2πrCu tCu)</code>，<code>P = I²R</code>，<code>ΔT = P / (h·2πrouter·L)</code>。假设 125 µm 裸石英包层外表面为同心 Pd/Cu 层，电流沿铜壳轴向流动，稳态热量仅通过外表面等效对流散出。忽略引线接触电阻、端部散热、轴向导热、薄膜裂纹和电流分布不均。</p>
+          <p><strong>应变与谱移：</strong>氢致轴向应变按可调系数线性估算，系数按 1 atm、1% H₂ 定义，并按氢分压平方根缩放。机械应变含石英热膨胀；瑞利光学谱移还含热光效应：<code>Δλ/λ = (1−pe)εH + (α+ξ)ΔT</code>，取 <code>pe=0.22</code>、<code>α=0.55 µε/K</code>、<code>ξ=6.9 µε/K</code>。</p>
+          <p><strong>瑞利信号：</strong>采用随机复高斯散射场生成单位均值散斑。扰动后场与基准场的复相关度按高斯频率相关模型计算，相关带宽近似为 <code>c/(2 n Lg)</code>。曲线是相干瑞利指纹的归一化示意，不是绝对后向散射功率或特定仪器的 OFDR/OTDR 预测；需用实际薄膜电阻率、散热边界、Pd 氢吸收等温线及仪器标定数据校准。</p>
+        </details>
+        <p class="footer-note">材料常数采用工程近似：n_eff=1.4682，铜体电阻率=1.68×10⁻⁸ Ω·m；SMF-28 包层直径按 125 µm。<br>武汉职业技术大学 · 光纤传感仿真平台 · 作者：池行强</p>
+      </section>
+    </div>
+  </main>
+
+  <dialog class="source-dialog" id="sourceDialog" aria-labelledby="sourceTitle">
+    <div class="source-heading"><h2 id="sourceTitle">COMSOL Java 模型 · 独立参数</h2><button class="button" id="closeSourceBtn" type="button" aria-label="关闭源码编辑器" title="关闭"><i data-lucide="x" aria-hidden="true"></i></button></div>
+    <textarea id="sourceEditor" aria-label="COMSOL Java 源码" spellcheck="false" wrap="off"></textarea>
+    <div class="source-actions">
+      <button class="button primary" id="saveSourceBtn" type="button"><i data-lucide="save" aria-hidden="true"></i>保存源码</button>
+      <button class="button" id="chooseComsolBtn" type="button"><i data-lucide="folder-search" aria-hidden="true"></i>COMSOL 目录</button>
+      <button class="button" id="runComsolBtn" type="button"><i data-lucide="play" aria-hidden="true"></i>求解并生成 MPH</button>
+      <button class="button" id="workspaceBtn" type="button"><i data-lucide="folder-open" aria-hidden="true"></i>工作目录</button>
+    </div>
+    <p class="source-state" id="sourceState" role="status" aria-live="polite"></p>
+    <pre id="comsolLog" hidden></pre>
+  </dialog>
+
+  <script src="/qrcode-generator.js"></script>
+  <script src="/lucide.min.js"></script>
+  <script src="/project.js"></script>
+  <script src="/app-controls.js"></script>
+  <script>
+    (() => {
+      // 武汉职业技术大学，作者：池行强。
+      // 本文件包含全部 HTML/CSS/JavaScript；无需构建工具，浏览器可直接运行。
+      // 网页为均匀参数近似；COMSOL 等效有限元模型见同目录 FiberRayleighComsol.java。
+      // defaults 是表单默认值；输入单位依次为 mm、nm、mA、百分数、摄氏度等。
+      const defaults = FiberProject.defaults;
+      const fields = Object.keys(defaults);
+      const $ = (id) => document.getElementById(id);
+      if (window.FiberAndroid) {
+        // Android 安装包在本机独立运行，使用本地口令登录；扫码登录用于电脑网页端。
+        $("qrLoginPanel").hidden = true;
+        $("loginSubtitle").textContent = "安卓仿真 APP · 作者：池行强";
+        document.querySelector("details.auth-fallback").open = true;
+      }
+      // 光学系数为工程近似，适用于 1550 nm 附近，需要用实际光纤和仪器校准。
+      const nEff = 1.4682;
+      const pe = 0.22;
+      const alphaSilica = 0.55e-6;
+      const thermoOptic = 6.9e-6;
+      const rhoCu = 1.68e-8;
+      const c0 = 299792458;
+      const silicaRadiusM = 62.5e-6;
+      let latest = null;
+      let authenticated = false;
+      let activeQr = null;
+      let qrPollTimer = null;
+      let qrCountdownTimer = null;
+
+      function readInputs() {
+        const out = {};
+        for (const key of fields) {
+          const raw = Number($(key).value);
+          out[key] = Number.isFinite(raw) ? raw : defaults[key];
+        }
+        // 防止厚度、长度、散热系数等为零导致除零；不会改变表单的显示单位。
+        out.length = Math.max(0.1, out.length);
+        out.wavelength = Math.max(100, out.wavelength);
+        out.pd = Math.max(0, out.pd);
+        out.cu = Math.max(0.1, out.cu);
+        out.current = Math.max(0, out.current);
+        out.hydrogen = Math.max(0, out.hydrogen);
+        out.pressure = Math.max(0.001, out.pressure);
+        out.rhoFactor = Math.max(0.01, out.rhoFactor);
+        out.heatTransfer = Math.max(0.01, out.heatTransfer);
+        out.hSensitivity = Math.max(0, out.hSensitivity);
+        out.gauge = Math.max(0.01, out.gauge);
+        return out;
+      }
+
+      function fmt(value, digits = 2) {
+        if (!Number.isFinite(value)) return "—";
+        const abs = Math.abs(value);
+        if (abs !== 0 && (abs >= 1e6 || abs < 0.001)) return value.toExponential(2);
+        return new Intl.NumberFormat("zh-CN", { maximumFractionDigits: digits, minimumFractionDigits: 0 }).format(value);
+      }
+
+      function calculate(p) {
+        // 1. 转为 SI 单位；Pd 位于石英外侧，Cu 位于 Pd 外侧，且电流只流过 Cu。
+        const lengthM = p.length / 1000;
+        const pdM = p.pd * 1e-9;
+        const cuM = p.cu * 1e-9;
+        const cuMeanRadius = silicaRadiusM + pdM + cuM / 2;
+        const outerRadius = silicaRadiusM + pdM + cuM;
+        // 同心圆环面积的中径写法：pi*(r_out^2-r_in^2) = 2*pi*r_mean*t。
+        const copperArea = 2 * Math.PI * cuMeanRadius * cuM;
+        const resistance = rhoCu * p.rhoFactor * lengthM / copperArea;
+        const currentA = p.current / 1000;
+        const powerW = currentA * currentA * resistance;
+        const surfaceArea = 2 * Math.PI * outerRadius * lengthM;
+        // 2. 网页假定全长均匀温度、仅外表面对流；不含端部导热和温度电阻反馈。
+        const deltaT = powerW / (p.heatTransfer * surfaceArea);
+        const hydrogenPartialAtm = (p.hydrogen / 100) * p.pressure;
+        // 3. hSensitivity 是“传给光纤的应变”，单位 µε；不是 Pd 的自由膨胀系数。
+        // 以 1% H2、1 atm 为标定参考，氢分压平方根规律仅为经验近似。
+        const hydrogenStrain = p.hSensitivity * Math.sqrt(Math.max(0, hydrogenPartialAtm / 0.01));
+        const thermalMechanicalStrain = alphaSilica * deltaT * 1e6;
+        const mechanicalStrain = hydrogenStrain + thermalMechanicalStrain;
+        const opticalEquivalentStrain = hydrogenStrain + ((alphaSilica + thermoOptic) / (1 - pe)) * deltaT * 1e6;
+        const lambdaM = p.wavelength * 1e-9;
+        // 4. 氢应变的光弹响应 + 自由石英的温度响应；频率与波长漂移符号相反。
+        const fractionalShift = (1 - pe) * hydrogenStrain * 1e-6 + (alphaSilica + thermoOptic) * deltaT;
+        const deltaLambdaNm = p.wavelength * fractionalShift;
+        const deltaFrequencyHz = -(c0 / lambdaM) * fractionalShift;
+        const corrBandwidthHz = c0 / (2 * nEff * p.gauge * 1e-3);
+        // 5. 统计相关散斑模型：相关长度 Lg 决定经验频率相关带宽。
+        // 它不是 Maxwell 全波求解，也不是特定 OFDR/OTDR 仪器的绝对功率预测。
+        const fieldCorrelation = Math.exp(-0.5 * Math.pow(deltaFrequencyHz / corrBandwidthHz, 2));
+        const intensityCorrelation = fieldCorrelation * fieldCorrelation;
+        const count = Math.max(160, Math.min(700, Math.round(p.length * 4)));
+        const seed = 48017; // 固定种子使同一参数重复得到同一条光纤指纹。
+        let state = seed;
+        function rand() {
+          state = (state * 1664525 + 1013904223) >>> 0;
+          return (state + 1) / 4294967297;
+        }
+        function gaussianPair() {
+          // Box-Muller 变换：实部/虚部方差各为 1/2，复场平均强度为 1。
+          const r = Math.sqrt(-2 * Math.log(Math.max(1e-12, rand())));
+          const a = 2 * Math.PI * rand();
+          return [r * Math.cos(a) / Math.sqrt(2), r * Math.sin(a) / Math.sqrt(2)];
+        }
+        const data = [];
+        let meanRef = 0;
+        for (let i = 0; i < count; i++) {
+          const [r1, i1] = gaussianPair();
+          const [r2, i2] = gaussianPair();
+          // 扰动复场 = 相关部分 + 独立部分；强度相关度为 |fieldCorrelation|²。
+          const aR = fieldCorrelation * r1 + Math.sqrt(Math.max(0, 1 - fieldCorrelation ** 2)) * r2;
+          const aI = fieldCorrelation * i1 + Math.sqrt(Math.max(0, 1 - fieldCorrelation ** 2)) * i2;
+          const zMm = p.length * i / (count - 1);
+          const roundTripLoss = Math.pow(10, -2 * 0.2 * (zMm / 1e6) / 10);
+          const reference = (r1 * r1 + i1 * i1) * roundTripLoss;
+          const perturbed = (aR * aR + aI * aI) * roundTripLoss;
+          data.push({ z: zMm, reference, perturbed });
+          meanRef += reference;
+        }
+        meanRef /= count;
+        for (const d of data) {
+          d.reference /= meanRef;
+          d.perturbed /= meanRef;
+          d.mechanical = mechanicalStrain;
+          d.optical = opticalEquivalentStrain;
+        }
+        return { p, resistance, powerW, deltaT, hydrogenStrain, mechanicalStrain, opticalEquivalentStrain, deltaLambdaNm, deltaFrequencyHz, corrBandwidthHz, fieldCorrelation, intensityCorrelation, data };
+      }
+
+      function drawChart(canvas, series, options) {
+        // Canvas 使用实际 CSS 尺寸 × 屏幕像素比，保证桌面和高分屏下曲线清晰。
+        const rect = canvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const w = rect.width, h = rect.height;
+        const margin = { left: 46, right: 10, top: 12, bottom: 30 };
+        const x0 = margin.left, x1 = w - margin.right;
+        const y0 = margin.top, y1 = h - margin.bottom;
+        const allY = series.flatMap(s => s.data.map(d => d.y)).filter(Number.isFinite);
+        let yMin = options.minY != null ? options.minY : Math.min(0, ...allY);
+        let yMax = options.maxY != null ? options.maxY : Math.max(...allY);
+        if (options.maxY == null) {
+          if (options.kind === "speckle") {
+            const sorted = [...allY].sort((a, b) => a - b);
+            yMax = Math.max(2, Math.min(9, sorted[Math.floor(sorted.length * 0.985)] * 1.2));
+          } else {
+            const abs = Math.max(1, ...allY.map(Math.abs));
+            yMin = Math.min(0, ...allY) - abs * 0.15;
+            yMax = Math.max(0, ...allY) + abs * 0.15;
+          }
+        }
+        if (yMax - yMin < 1e-9) { yMin -= 1; yMax += 1; }
+        ctx.clearRect(0, 0, w, h);
+        ctx.font = '10px Inter, "Segoe UI", "Microsoft YaHei", sans-serif';
+        ctx.lineWidth = 1;
+        const yTicks = 4;
+        for (let i = 0; i <= yTicks; i++) {
+          const f = i / yTicks;
+          const y = y1 - f * (y1 - y0);
+          const val = yMin + f * (yMax - yMin);
+          ctx.strokeStyle = "#e8edeb";
+          ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+          ctx.fillStyle = "#71807b";
+          ctx.textAlign = "right"; ctx.textBaseline = "middle";
+          ctx.fillText(fmt(val, options.kind === "speckle" ? 1 : 1), x0 - 7, y);
+        }
+        const xTicks = 4;
+        for (let i = 0; i <= xTicks; i++) {
+          const f = i / xTicks;
+          const x = x0 + f * (x1 - x0);
+          ctx.strokeStyle = "#f0f3f1";
+          ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke();
+          ctx.fillStyle = "#71807b";
+          ctx.textAlign = "center"; ctx.textBaseline = "top";
+          ctx.fillText(fmt(options.xMax * f, 0), x, y1 + 7);
+        }
+        ctx.save();
+        ctx.beginPath(); ctx.rect(x0, y0, x1 - x0, y1 - y0); ctx.clip();
+        for (const s of series) {
+          ctx.beginPath();
+          ctx.lineWidth = s.width || 1.55;
+          ctx.strokeStyle = s.color;
+          for (let i = 0; i < s.data.length; i++) {
+            const d = s.data[i];
+            const x = x0 + (d.x / options.xMax) * (x1 - x0);
+            const y = y1 - ((d.y - yMin) / (yMax - yMin)) * (y1 - y0);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function render() {
+        if (!authenticated) return;
+        // 纯计算函数 calculate 与 DOM/Canvas 更新分离，便于替换模型公式。
+        const result = calculate(readInputs());
+        latest = result;
+        $("resistanceOut").innerHTML = `${fmt(result.resistance, 2)}<span>Ω</span>`;
+        $("powerOut").innerHTML = `${fmt(result.powerW * 1000, 3)}<span>mW</span>`;
+        $("tempOut").innerHTML = `${fmt(result.deltaT, 2)}<span>K</span>`;
+        $("shiftOut").innerHTML = `${fmt(result.deltaFrequencyHz / 1e9, 3)}<span>GHz</span>`;
+        $("hydrogenStrainOut").textContent = `${fmt(result.hydrogenStrain, 3)} µε`;
+        $("mechanicalStrainOut").textContent = `${fmt(result.mechanicalStrain, 3)} µε`;
+        $("opticalStrainOut").textContent = `${fmt(result.opticalEquivalentStrain, 3)} µε`;
+        $("correlationOut").textContent = `${fmt(result.intensityCorrelation * 100, 1)}%`;
+        const r = result;
+        $("thermalReadout").innerHTML = `<strong>电热估算：</strong>铜层电阻约 ${fmt(r.resistance, 1)} Ω，在 ${fmt(r.p.current, 2)} mA 下耗散 ${fmt(r.powerW * 1000, 3)} mW；估算温升 ${fmt(r.deltaT, 2)} K，表面温度约 ${fmt(r.p.ambient + r.deltaT, 2)} °C。`;
+        $("signalReadout").innerHTML = `<strong>光学响应：</strong>预测波长变化 ${fmt(r.deltaLambdaNm * 1000, 2)} pm、频率变化 ${fmt(r.deltaFrequencyHz / 1e9, 3)} GHz；按 ${fmt(r.p.gauge, 1)} mm 相关长度估算，扰动前后回波强度相关度约 ${fmt(r.intensityCorrelation * 100, 1)}%。`;
+        const rayleighSeries = [
+          { color: "#168b74", width: 1.45, data: r.data.map(d => ({ x: d.z, y: d.reference })) },
+          { color: "#cf7041", width: 1.35, data: r.data.map(d => ({ x: d.z, y: d.perturbed })) }
+        ];
+        const strainSeries = [
+          { color: "#3479a5", width: 1.8, data: r.data.map(d => ({ x: d.z, y: d.mechanical })) },
+          { color: "#cf7041", width: 1.8, data: r.data.map(d => ({ x: d.z, y: d.optical })) }
+        ];
+        drawChart($("rayleighCanvas"), rayleighSeries, { kind: "speckle", xMax: r.p.length, minY: 0 });
+        drawChart($("strainCanvas"), strainSeries, { kind: "strain", xMax: r.p.length });
+      }
+
+      function exportCsv() {
+        // UTF-8 BOM 便于 Excel 识别编码；输出包含距离、强度和两类应变。
+        if (!latest) render();
+        const head = ["z_mm", "rayleigh_reference_norm", "rayleigh_perturbed_norm", "mechanical_strain_microstrain", "optical_equivalent_strain_microstrain"];
+        const lines = [head.join(",")];
+        for (const d of latest.data) lines.push([d.z, d.reference, d.perturbed, d.mechanical, d.optical].map(v => Number(v).toPrecision(8)).join(","));
+        if (window.FiberAndroid) {
+          document.dispatchEvent(new CustomEvent("fiber:file-export", { detail: {
+            filename: "fiber-rayleigh-simulation.csv", mime: "text/csv", contents: "\uFEFF" + lines.join("\r\n")
+          } }));
+          return;
+        }
+        const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "fiber-rayleigh-simulation.csv";
+        link.click();
+        URL.revokeObjectURL(url);
+      }
+
+      async function api(url, options = {}) {
+        if (window.FiberAndroid) {
+          const method = (options.method || "GET").toUpperCase();
+          if (url === "/api/session" && method === "GET") return { authenticated: window.FiberAndroid.isAuthenticated() };
+          if (url === "/api/login" && method === "POST") {
+            const credentials = JSON.parse(options.body || "{}");
+            if (window.FiberAndroid.login(credentials.username || "", credentials.password || "")) return { authenticated: true };
+            throw new Error("登录名或密码不正确");
+          }
+          if (url === "/api/logout" && method === "POST") {
+            window.FiberAndroid.logout();
+            return { authenticated: false };
+          }
+          throw new Error("此功能需要电脑端登录服务。");
+        }
+        let response;
+        try {
+          response = await fetch(url, { cache: "no-store", credentials: "same-origin", ...options });
+        } catch {
+          throw new Error("连接不到登录服务器。请通过 http://localhost:8080 打开页面，并让手机与电脑连接同一 Wi-Fi。");
+        }
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "请求失败，请重试。");
+        return data;
+      }
+
+      function setQrHint(message, isError = false) {
+        const hint = $("qrHint");
+        hint.textContent = message;
+        hint.classList.toggle("error", isError);
+      }
+
+      function drawQrCode(value) {
+        if (typeof qrcode !== "function") throw new Error("二维码组件没有加载，请刷新页面。");
+        const code = qrcode(0, "M");
+        code.addData(value, "Byte");
+        code.make();
+        const canvas = $("qrCanvas");
+        const ctx = canvas.getContext("2d");
+        const count = code.getModuleCount();
+        const quietZone = 4;
+        const scale = canvas.width / (count + quietZone * 2);
+        const offset = (canvas.width - scale * count) / 2;
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#142421";
+        for (let row = 0; row < count; row++) {
+          for (let col = 0; col < count; col++) {
+            if (code.isDark(row, col)) {
+              const x0 = Math.floor(offset + col * scale);
+              const y0 = Math.floor(offset + row * scale);
+              const x1 = Math.ceil(offset + (col + 1) * scale);
+              const y1 = Math.ceil(offset + (row + 1) * scale);
+              ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+            }
+          }
+        }
+      }
+
+      function updateQrCountdown() {
+        if (!activeQr) return;
+        const seconds = Math.max(0, Math.ceil((activeQr.expiresAt - Date.now()) / 1000));
+        const minutes = String(Math.floor(seconds / 60)).padStart(2, "0");
+        const remainder = String(seconds % 60).padStart(2, "0");
+        $("qrCountdown").textContent = seconds ? `有效期 ${minutes}:${remainder}` : "二维码已过期";
+        if (seconds === 0) setQrHint("二维码已过期，请刷新后重新扫描。", true);
+      }
+
+      function stopQrTimers() {
+        if (qrPollTimer) clearTimeout(qrPollTimer);
+        if (qrCountdownTimer) clearInterval(qrCountdownTimer);
+        qrPollTimer = null;
+        qrCountdownTimer = null;
+      }
+
+      async function cancelQr(ticket) {
+        if (!ticket) return;
+        try {
+          await fetch("/api/qr/cancel", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ticket: ticket.id, key: ticket.pollKey })
+          });
+        } catch { /* Server-side expiry also removes abandoned tickets. */ }
+      }
+
+      async function pollQr(ticket) {
+        if (activeQr !== ticket || authenticated) return;
+        if (Date.now() >= ticket.expiresAt) {
+          setQrHint("二维码已过期，请刷新后重新扫描。", true);
+          return;
+        }
+        try {
+          const query = new URLSearchParams({ ticket: ticket.id, key: ticket.pollKey });
+          const status = await api(`/api/qr/status?${query}`);
+          if (activeQr !== ticket) return;
+          if (status.state === "approved") {
+            const session = await api("/api/session");
+            if (session.authenticated) {
+              showApp();
+              return;
+            }
+            throw new Error("扫码已确认，但登录会话没有建立，请刷新二维码重试。");
+          }
+          if (status.state !== "pending") {
+            setQrHint("本次登录已结束，请刷新二维码。", true);
+            return;
+          }
+          qrPollTimer = setTimeout(() => pollQr(ticket), 1400);
+        } catch (error) {
+          if (activeQr === ticket) setQrHint(error.message, true);
+        }
+      }
+
+      async function startQrLogin() {
+        const previous = activeQr;
+        activeQr = null;
+        stopQrTimers();
+        void cancelQr(previous);
+        $("refreshQrBtn").disabled = true;
+        $("qrCountdown").textContent = "正在生成…";
+        setQrHint("正在生成一次性登录二维码…");
+        try {
+          const ticket = await api("/api/qr/start", { method: "POST" });
+          ticket.expiresAt = Number(ticket.expiresAt);
+          activeQr = ticket;
+          drawQrCode(ticket.scanUrl);
+          setQrHint("手机与电脑连接同一 Wi-Fi 后，使用相机或微信扫描并确认登录。");
+          updateQrCountdown();
+          qrCountdownTimer = setInterval(updateQrCountdown, 1000);
+          void pollQr(ticket);
+        } catch (error) {
+          setQrHint(error.message, true);
+          $("qrCountdown").textContent = "不可用";
+        } finally {
+          $("refreshQrBtn").disabled = false;
+        }
+      }
+
+      function showApp() {
+        authenticated = true;
+        stopQrTimers();
+        activeQr = null;
+        document.body.classList.remove("auth-locked");
+        $("loginScreen").hidden = true;
+        document.dispatchEvent(new Event("fiber:authenticated"));
+        try {
+          render();
+        } catch (error) {
+          console.error("仿真绘图初始化失败", error);
+          $("signalReadout").textContent = "仿真已登录；当前浏览器未能初始化图表，请刷新页面或使用最新版 Chrome/Edge。";
+        }
+      }
+
+      function showLogin() {
+        authenticated = false;
+        stopQrTimers();
+        activeQr = null;
+        document.body.classList.add("auth-locked");
+        $("loginScreen").hidden = false;
+        $("loginUsername").value = "";
+        $("loginPassword").value = "";
+        $("loginError").textContent = "";
+      }
+
+      $("passwordLoginForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const username = $("loginUsername").value.trim();
+        const password = $("loginPassword").value;
+        $("loginError").textContent = "";
+        try {
+          await api("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+          });
+          showApp();
+        } catch (error) {
+          $("loginError").textContent = error.message;
+        }
+      });
+      $("refreshQrBtn").addEventListener("click", startQrLogin);
+      for (const key of fields) $(key).addEventListener("input", render);
+      $("runBtn").addEventListener("click", render);
+      $("exportBtn").addEventListener("click", exportCsv);
+      $("logoutBtn").addEventListener("click", async () => {
+        try { await api("/api/logout", { method: "POST" }); }
+        finally {
+          showLogin();
+          if (!window.FiberAndroid) void startQrLogin();
+        }
+      });
+      $("resetBtn").addEventListener("click", () => {
+        for (const key of fields) $(key).value = defaults[key];
+        render();
+        document.dispatchEvent(new Event("fiber:parameters-reset"));
+      });
+      if (typeof ResizeObserver === "function") {
+        const resizeObserver = new ResizeObserver(() => {
+          if (authenticated) render();
+        });
+        resizeObserver.observe($("rayleighCanvas"));
+        resizeObserver.observe($("strainCanvas"));
+      } else {
+        window.addEventListener("resize", () => {
+          if (authenticated) render();
+        });
+      }
+      api("/api/session").then(session => {
+        if (session.authenticated) showApp();
+        else if (!window.FiberAndroid) void startQrLogin();
+      }).catch(error => {
+        setQrHint(error.message, true);
+        $("qrCountdown").textContent = "服务器未连接";
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "model": "COMSOL 6.1 1D composite axial thermoelastic approximation",
+  "author": "池行强",
+  "institution": "武汉职业技术大学",
+  "parameters_file": "comsol_parameters_si.json",
+  "samples": 1601,
+  "copper_resistance_at_ambient_ohm": 1283.1175128909445,
+  "average_temperature_rise_K": 3.9444857978019647,
+  "maximum_temperature_rise_K": 4.1490513062485785,
+  "maximum_mechanical_strain_microstrain": 2.446838009468157,
+  "hydrogen_transferred_strain_microstrain": 0.10745382351036088,
+  "minimum_rayleigh_frequency_shift_GHz": -6.003396748182415,
+  "maximum_rayleigh_wavelength_shift_pm": 48.11048544626248,
+  "average_joule_power_mW": 1.3028563442363308,
+  "validation": {
+    "passed": true,
+    "temperature_max_error_K": 0.00003219290261734231,
+    "displacement_max_error_m": 4.55291884823372e-14,
+    "axial_strain_max_error_microstrain": 0.001906465514934923,
+    "checks": [
+      "finite values",
+      "temperature endpoints",
+      "axial anchor",
+      "analytical steady heat solution",
+      "analytical free-end axial solution",
+      "optical shift convention"
+    ]
+  },
+  "limits": "Pd hydrogen eigenstrain is an uncalibrated example. Perfect bonding, uniform material parameters and thermalized ends. Rayleigh CSV is normalized statistical speckle only; samples do not define instrument spatial resolution."
+}
