@@ -1,0 +1,25 @@
+name: 安装或运行问题
+description: 反馈安装、登录、项目文件或仿真界面的问题。
+title: '[问题] '
+labels: []
+body:
+  - type: input
+    id: environment
+    attributes:
+      label: 设备和版本
+      description: 例如小米 14 / 澎湃 OS 2 / APP v1.0.0，或 Windows 11 / Chrome 版本。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 操作步骤和实际结果
+      description: 从打开 APP 开始，写下如何重现，并附提示文字或截图。不要提交密码、访问令牌或个人文件。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+    validations:
+      required: true

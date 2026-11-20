@@ -1,12 +1,80 @@
 # 武汉职业技术大学 · 光纤应变与瑞利散射仿真 APP
 
-作者：池行强。Windows、安卓与网页使用相同的仿真界面。默认条件为 SMF-28、长度 100 mm、Pd 10 nm、Cu 10 nm、铜层电流 1 mA、氢气体积分数 1%。
+作者：池行强。用于观察 SMF-28 光纤表面 Pd/Cu 薄膜在加热和氢气作用下的近似应变与相干瑞利散斑响应。支持参数编辑、项目 JSON 保存与导入、CSV 曲线导出；Windows 端还提供本机 COMSOL 模型编辑与求解入口。
+
+[下载安卓 APK](https://github.com/AIsky001/fiber-rayleigh-simulator/releases/download/v1.0.0/FiberRayleigh-1.0.0-Android.apk) · [版本与源码下载](https://github.com/AIsky001/fiber-rayleigh-simulator/releases/tag/v1.0.0) · [操作演示](#操作演示) · [反馈问题](https://github.com/AIsky001/fiber-rayleigh-simulator/issues/new/choose)
+
+默认条件：SMF-28，光纤长度 100 mm，Pd 10 nm，Cu 10 nm，电流 1 mA，氢气体积分数 1%，工作波长 1550 nm，环境温度 25 °C。
+
+![默认实验条件下的仿真界面，包含参数、瑞利后向散射曲线和沿程应变](docs/images/desktop-default.png)
+
+界面截图来自本机浏览器中的共享页面。曲线为工程近似与可复现随机散斑，未使用实测数据；模型假设见[适用范围](#适用范围)。
 
 ## GitHub 下载
 
-安卓安装包与可编辑源码 ZIP 在本仓库的 **Releases** 页面提供。用手机浏览器打开发布页，展开 **Assets**，下载以 `.apk` 结尾的文件，再从手机“文件管理 → 下载”中安装。微信内无法下载时，请使用系统浏览器打开发布页。登录名和密码均为 `admin`。
+| 下载内容 | 入口 |
+| --- | --- |
+| Android 7.0 及以上安装包，约 1.28 MB | [FiberRayleigh-1.0.0-Android.apk](https://github.com/AIsky001/fiber-rayleigh-simulator/releases/download/v1.0.0/FiberRayleigh-1.0.0-Android.apk) |
+| v1.0.0 可编辑源码，带注释 | [源码 ZIP](https://github.com/AIsky001/fiber-rayleigh-simulator/releases/download/v1.0.0/FiberRayleigh-1.0.0-Editable-Source.zip) |
+| 文件校验 | [SHA256SUMS.txt](https://github.com/AIsky001/fiber-rayleigh-simulator/releases/download/v1.0.0/SHA256SUMS.txt) |
+
+登录名和密码均为 `admin`。用小米系统浏览器打开 APK 链接，下载后进入“文件管理 → 下载”，点击安装包，并按提示允许文件管理器安装应用。微信内无法下载或打开时，用系统浏览器访问上方链接。
+
+<a href="https://github.com/AIsky001/fiber-rayleigh-simulator/releases/tag/v1.0.0"><img src="docs/images/android-download-qr.png" width="192" alt="安卓版本下载页二维码"></a>
+
+二维码指向 GitHub 下载页，不是登录码。电脑浏览首页时，可用手机扫码，再用系统浏览器打开下载页。
+
+发布附件是固定的 v1.0.0 快照；后续补充的截图、示例和说明以本仓库 `main` 分支为准。
 
 本仓库包含已验证的安卓调试版安装包 `downloads/FiberRayleigh-1.0.0-Android.apk`。首次推送到 `main` 后，GitHub Actions 会校验安装包并自动创建 `v1.0.0` 测试版发布，同时提供源码 ZIP 和 SHA-256 校验文件。发布进度可在 **Actions** 页面查看；已经存在的同名发布不会被覆盖。更新安装包时需同步版本号、校验文件和发布说明。
+
+## 操作演示
+
+![登录、修改电流与氢浓度、保存项目和导出 CSV 的实际页面操作](docs/media/simulator-demo.gif)
+
+[播放约 15 秒的操作录屏（WebM）](https://github.com/AIsky001/fiber-rayleigh-simulator/blob/main/docs/media/simulator-demo.webm)。录屏来自桌面浏览器，展示密码登录、1 mA 改为 2 mA、氢浓度调整、项目保存、CSV 导出与示例项目导入。步骤和输出数值见[演示说明](docs/DEMO.md)。
+
+## 手机布局
+
+<img src="docs/images/mobile-login-preview.png" width="250" alt="安卓登录界面的浏览器预览"> <img src="docs/images/mobile-results-preview.png" width="250" alt="手机宽度下的仿真结果预览"> <img src="docs/images/mobile-parameters-preview.png" width="250" alt="手机宽度下的参数编辑预览">
+
+以上为 390 × 844 视口的浏览器预览，登录桥接使用模拟接口。尚未验证真机安装、系统文件选择器及不同厂商 WebView 的表现。
+
+## 试用与示例
+
+网页近似仿真无需安装 COMSOL。在安装 Node.js 24 的电脑上，进入项目目录运行：
+
+```powershell
+node outputs/server.js
+```
+
+打开 `http://localhost:8080`，选择“使用密码登录”，输入 `admin` / `admin`。点击“打开项目”可导入下面的 JSON 文件：
+
+| 示例 | 用途 |
+| --- | --- |
+| [默认实验](examples/smf28-default.json) | 100 mm 光纤，Pd/Cu 各 10 nm，1 mA，1% H₂ |
+| [2 mA 加热对比](examples/smf28-current-2ma.json) | 其余参数不变，观察电流加倍后的电热与光学响应 |
+
+默认模型的显示结果为电阻约 1,283.12 Ω、功率 1.283 mW、温升 4.08 K、等效谱移 −5.898 GHz。电流改为 2 mA 后，功率约为 5.132 mW。它们来自恒定电阻、等效散热边界等假设，不能作为实际器件的标定值。
+
+| 功能 | 安卓 APP | 本机网页 | Windows APP |
+| --- | --- | --- | --- |
+| 参数编辑、瑞利近似曲线 | 支持，离线运行 | 支持，需启动 Node 服务 | 支持 |
+| 项目 JSON 导入保存、CSV 导出 | 通过系统文件选择器 | 通过浏览器 | 通过浏览器界面 |
+| 扫码确认登录 | 使用本地密码登录 | 支持，需手机与服务连通 | 支持，需局域网连通 |
+| COMSOL Java 编辑、求解、打开 MPH | 不支持 | 不支持 | 需本机 COMSOL 与许可证 |
+
+## 适用范围
+
+程序可用于教学演示和参数趋势比较。模型按 125 µm 裸石英包层外的同心 Pd/Cu 薄膜估算轴向铜层电阻、焦耳热、均匀温升与等效氢致应变。薄膜电阻率倍率、散热系数和氢致应变传递系数可调整，实际应用前需要校准。
+
+瑞利曲线是归一化相干散斑示意，不能直接解释为绝对散射功率或特定 OFDR/OTDR 仪器读数。COMSOL 参数与网页项目参数独立，当前不会自动同步。详细假设见[COMSOL 模型说明](outputs/COMSOL模型说明.md)及界面中的“模型方程与适用范围”。
+
+## 反馈与改进
+
+[安装或运行问题](https://github.com/AIsky001/fiber-rayleigh-simulator/issues/new?template=bug_report.yml)请注明手机型号、系统和应用版本、操作步骤及错误提示。[模型或功能建议](https://github.com/AIsky001/fiber-rayleigh-simulator/issues/new?template=model_feedback.yml)请标明参数单位和依据；实测数据与仿真数据需要区分。
+
+后续工作包括安卓真机验证、薄膜与氢响应参数校准，以及网页项目参数和 COMSOL 模型的同步。这些尚未完成。
 
 ## 安卓 APP
 
@@ -14,7 +82,7 @@
 
 项目 JSON 导入使用安卓系统文件选择器，保存项目与导出 CSV 使用“创建文档”选择保存位置；实验参数会保存在应用 WebView 的本地数据。安卓端可调整参数和编辑实验项目，不能运行 Windows COMSOL；请在 Windows APP 中执行有限元求解。最低支持 Android 7.0（API 24）。
 
-安卓工程源码和独立构建说明见 [`android/README.md`](android/README.md)。安装 Android SDK Platform 33、Build Tools 33.0.2、JDK 17（完整 JDK，须包含 `jlink.exe`）后，在项目根目录执行 `powershell -ExecutionPolicy Bypass -File scripts/build-android.ps1`，或在 `android/` 目录运行 `gradlew.bat :app:assembleDebug`。调试版 APK 输出到 `release/FiberRayleigh-1.0.0-Android.apk`。本源码包不包含 Android SDK、JDK 或 APK。
+安卓工程源码和独立构建说明见 [`android/README.md`](android/README.md)。安装 Android SDK Platform 33、Build Tools 33.0.2、JDK 17（完整 JDK，须包含 `jlink.exe`）后，在项目根目录执行 `powershell -ExecutionPolicy Bypass -File scripts/build-android.ps1`，或在 `android/` 目录运行 `gradlew.bat :app:assembleDebug`。调试版 APK 输出到 `release/FiberRayleigh-1.0.0-Android.apk`。Releases 中的可编辑源码 ZIP 不包含 Android SDK、JDK 或 APK。
 
 已生成的 APK 独立提供于 `release/FiberRayleigh-1.0.0-Android.apk`。将文件传到安卓手机后，在文件管理器中打开，按系统提示允许该来源安装应用，安装后打开“光纤瑞利仿真”，输入 `admin` / `admin` 登录。此包为调试签名版，可直接安装测试；未上架应用商店。已完成构建、签名和共享页面交互检查，尚未在手机或模拟器上验证安装与系统文件选择器。
 

@@ -7,7 +7,7 @@ New-Item -ItemType Directory -Path $stage,$releaseDir -Force | Out-Null
 try {
     $rootFiles = @('package.json','pnpm-lock.yaml','pnpm-workspace.yaml','.npmrc','.gitignore','README.md','THIRD_PARTY_NOTICES.md','start-app.ps1')
     foreach ($name in $rootFiles) { Copy-Item -LiteralPath (Join-Path $projectRoot $name) -Destination $stage }
-    foreach ($name in @('desktop','android','tests','scripts','assets','.github')) { Copy-Item -LiteralPath (Join-Path $projectRoot $name) -Destination $stage -Recurse }
+    foreach ($name in @('desktop','android','tests','scripts','assets','.github','docs','examples')) { Copy-Item -LiteralPath (Join-Path $projectRoot $name) -Destination $stage -Recurse }
     # Exclude local Gradle state, SDK paths, and any previous build output.
     Get-ChildItem -LiteralPath (Join-Path $stage 'android') -Directory -Filter '.gradle' -Recurse | Remove-Item -Recurse -Force
     Remove-Item -LiteralPath (Join-Path $stage 'android\local.properties') -Force -ErrorAction SilentlyContinue
